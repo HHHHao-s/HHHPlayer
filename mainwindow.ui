@@ -14,79 +14,109 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QWidget" name="showCtrlBarBgWidget" native="true">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>0</y>
-      <width>1100</width>
-      <height>725</height>
-     </rect>
+   <layout class="QGridLayout" name="gridLayout">
+    <property name="sizeConstraint">
+     <enum>QLayout::SetDefaultConstraint</enum>
     </property>
-    <widget class="CtrlBar" name="ctrlBarWindow" native="true">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>650</y>
-       <width>1100</width>
-       <height>75</height>
-      </rect>
-     </property>
-     <widget class="QLabel" name="label">
-      <property name="geometry">
-       <rect>
-        <x>500</x>
-        <y>30</y>
-        <width>49</width>
-        <height>14</height>
-       </rect>
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <item row="0" column="0">
+     <widget class="QWidget" name="showCtrlBarBgWidget" native="true">
+      <property name="minimumSize">
+       <size>
+        <width>700</width>
+        <height>375</height>
+       </size>
       </property>
-      <property name="text">
-       <string>控制条</string>
-      </property>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <item row="0" column="0">
+        <widget class="DisplayWindow" name="showWindow" native="true">
+         <property name="minimumSize">
+          <size>
+           <width>700</width>
+           <height>300</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="CtrlBar" name="ctrlBarWindow" native="true">
+         <property name="minimumSize">
+          <size>
+           <width>700</width>
+           <height>75</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>75</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
-    </widget>
-    <widget class="QWidget" name="showWindow" native="true">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>0</y>
-       <width>1100</width>
-       <height>650</height>
-      </rect>
-     </property>
-     <widget class="QLabel" name="label_2">
-      <property name="geometry">
-       <rect>
-        <x>400</x>
-        <y>460</y>
-        <width>49</width>
-        <height>14</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>画面</string>
-      </property>
-     </widget>
-    </widget>
-   </widget>
+    </item>
+   </layout>
   </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>1280</width>
-     <height>19</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QStatusBar" name="statusbar"/>
   <widget class="QDockWidget" name="playListDockWidget">
+   <property name="minimumSize">
+    <size>
+     <width>180</width>
+     <height>100</height>
+    </size>
+   </property>
+   <property name="floating">
+    <bool>false</bool>
+   </property>
+   <property name="features">
+    <set>QDockWidget::NoDockWidgetFeatures</set>
+   </property>
+   <property name="allowedAreas">
+    <set>Qt::RightDockWidgetArea</set>
+   </property>
+   <property name="windowTitle">
+    <string/>
+   </property>
    <attribute name="dockWidgetArea">
     <number>2</number>
    </attribute>
-   <widget class="QWidget" name="playListContent">
+   <widget class="PlayListWindow" name="playListContent">
     <widget class="QLabel" name="label_4">
      <property name="geometry">
       <rect>
@@ -103,10 +133,34 @@
    </widget>
   </widget>
   <widget class="QDockWidget" name="titleDockWidget">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="minimumSize">
+    <size>
+     <width>600</width>
+     <height>75</height>
+    </size>
+   </property>
+   <property name="maximumSize">
+    <size>
+     <width>1800</width>
+     <height>75</height>
+    </size>
+   </property>
+   <property name="contextMenuPolicy">
+    <enum>Qt::DefaultContextMenu</enum>
+   </property>
+   <property name="features">
+    <set>QDockWidget::NoDockWidgetFeatures</set>
+   </property>
+   <property name="allowedAreas">
+    <set>Qt::TopDockWidgetArea</set>
+   </property>
    <attribute name="dockWidgetArea">
     <number>4</number>
    </attribute>
-   <widget class="QWidget" name="titleContent">
+   <widget class="titleBar" name="titleContent">
     <widget class="QLabel" name="label_3">
      <property name="geometry">
       <rect>
@@ -128,6 +182,24 @@
    <class>CtrlBar</class>
    <extends>QWidget</extends>
    <header location="global">ctrlbar.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>titleBar</class>
+   <extends>QWidget</extends>
+   <header location="global">titlebar.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>PlayListWindow</class>
+   <extends>QWidget</extends>
+   <header location="global">playlistwindow.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>DisplayWindow</class>
+   <extends>QWidget</extends>
+   <header location="global">displaywindow.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

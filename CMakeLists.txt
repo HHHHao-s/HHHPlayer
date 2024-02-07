@@ -24,6 +24,10 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
         ctrlbar.h ctrlbar.cpp ctrlbar.ui
+        titlebar.h titlebar.cpp titlebar.ui
+        playlistwindow.h playlistwindow.cpp playlistwindow.ui
+        displaywindow.h displaywindow.cpp displaywindow.ui
+        icon.qrc
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET HHHPlayer APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

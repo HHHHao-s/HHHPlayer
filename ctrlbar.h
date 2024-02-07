@@ -15,6 +15,11 @@ public:
     explicit CtrlBar(QWidget *parent = nullptr);
     ~CtrlBar();
 
+private slots:
+    void on_playBtn_clicked();
+
+    void on_stopBtn_clicked();
+
 private:
     Ui::CtrlBar *ui;
 };
