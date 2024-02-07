@@ -9,6 +9,10 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+
+
+
+
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
@@ -17,6 +21,7 @@ set(PROJECT_SOURCES
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
+
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -52,6 +57,15 @@ INCLUDE_DIRECTORIES(
 )
 
 target_link_libraries(HHHPlayer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+
+set(LIBS  avcodec avformat swscale avdevice avutil avfilter swresample postproc)
+set(LINK_DIR ${PROJECT_SOURCE_DIR}/thirdParty/ffmpeg/lib)
+set(INCLUDE_DIR ${PROJECT_SOURCE_DIR}/thirdParty/ffmpeg/include)
+
+target_link_directories(HHHPlayer PRIVATE ${LINK_DIR})
+target_include_directories(HHHPlayer PRIVATE ${INCLUDE_DIR})
+target_link_libraries(HHHPlayer PRIVATE ${LIBS})
+
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
