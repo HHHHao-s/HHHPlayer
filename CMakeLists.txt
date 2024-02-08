@@ -28,6 +28,8 @@ set(PROJECT_SOURCES
         ffplayer.h
         ffplayer.cpp
         logger.h
+        bufferqueue.h
+        bufferqueue.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

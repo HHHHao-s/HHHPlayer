@@ -19,6 +19,8 @@ signals:
     // 调用的时候会自动将信号传递给槽函数
     void SigPlayOrPause();
 
+    void SigStop();
+
 private slots:
     void on_playBtn_clicked();
 

@@ -28,12 +28,13 @@ CtrlBar::~CtrlBar()
 void CtrlBar::on_playBtn_clicked()
 {
     qDebug() << "on_playBtn_clicked";
-    SigPlayOrPause();
+    emit SigPlayOrPause();
 }
 
 
 void CtrlBar::on_stopBtn_clicked()
 {
     qDebug() << "on_stopBtn_clicked";
+    emit SigStop();
 }
 

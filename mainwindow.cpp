@@ -13,6 +13,7 @@ InitSignalsAndSlots();
 
 int MainWindow::InitSignalsAndSlots() {
     connect(ui->ctrlBarWindow, &CtrlBar::SigPlayOrPause, this, &MainWindow::OnPlayOrPause);
+    connect(ui->ctrlBarWindow, &CtrlBar::SigStop, this, &MainWindow::OnStop);
     return 0;
 }
 
@@ -41,6 +42,17 @@ void MainWindow::OnPlayOrPause() {
     return;
 }
 
+void MainWindow::OnStop() {
+	LOG_INFO("OnStop");
+	if (mp_) {
+		mp_->stop();
+        mp_->destroy();
+		delete mp_;
+		mp_ = nullptr;
+	}
+	return;
+}
+
 MainWindow::~MainWindow()
 {
     delete ui;
@@ -59,9 +71,21 @@ int MainWindow::messageLoop(void *arg) {
         switch (msg.what_) {
             case MSG_NULL:
 				break;
+            case MSG_PREPARED:
+                doPrepared();
+                break;
             default:
 				break;
         }
+	}
+	return 0;
+}
+
+
+int MainWindow::doPrepared() {
+	LOG_INFO("doPrepared");
+	if (mp_) {
+		mp_->start();
 	}
 	return 0;
 }

@@ -28,18 +28,20 @@ public:
 	int start();
 	int pause();
 	int stop();
+	int destroy();
 
-
+	
 private:
 	std::mutex mutex_;
 	FFPlayer* player_{nullptr};
 	std::function<int(void*)> msg_loop_; // message loop
 	std::thread* msg_thread_{ nullptr };
-	std::string url_;
-
+	std::string url_{};
+	int doPrepared(Msg &msg);
 	enum class State {
 		Idle,
 		Preparing,
+		Prepared,
 		Playing,
 	}state_{State::Idle};
 	// filter those message that no need to send to ui

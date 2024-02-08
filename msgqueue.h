@@ -9,15 +9,18 @@
 #include <condition_variable>
 
 #define MSG_NULL -1
-
+#define MSG_PREPARED 100
+#define MSG_STARTED 101
 struct Msg {
 
 	int what_{MSG_NULL};
-	int arg1_;
-	int arg2_;
+	int arg1_{0};
+	int arg2_{ 0 };
 	void * obj_{ nullptr };
 	size_t len_;
 	std::function<void(void*)> free_{nullptr};
+	Msg() = default;
+	Msg(int what, int arg1=0, int arg2=0) : what_(what), arg1_(arg1), arg2_(arg2) {}
 
 	void free() {
 		if (free_ != nullptr) {
@@ -52,3 +55,5 @@ private:
 	std::mutex mutex_;
 	std::condition_variable cond_;
 };
+
+

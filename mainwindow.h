@@ -23,7 +23,9 @@ private:
     Ui::MainWindow *ui;
     int InitSignalsAndSlots();
     void OnPlayOrPause();
-    MediaPlayer* mp_;
+    void OnStop();
+    MediaPlayer* mp_{nullptr};
+    int doPrepared();
 
 };
 #endif // MAINWINDOW_H
