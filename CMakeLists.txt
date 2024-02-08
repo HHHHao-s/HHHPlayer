@@ -21,7 +21,13 @@ set(PROJECT_SOURCES
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
-
+        mediaplayer.h
+        mediaplayer.cpp
+        msgqueue.h
+        msgqueue.cpp
+        ffplayer.h
+        ffplayer.cpp
+        logger.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

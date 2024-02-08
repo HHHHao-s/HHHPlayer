@@ -15,6 +15,10 @@ public:
     explicit CtrlBar(QWidget *parent = nullptr);
     ~CtrlBar();
 
+signals:
+    // 调用的时候会自动将信号传递给槽函数
+    void SigPlayOrPause();
+
 private slots:
     void on_playBtn_clicked();
 

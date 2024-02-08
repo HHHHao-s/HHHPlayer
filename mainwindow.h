@@ -2,7 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-
+#include <qsignalmapper.h>
+#include "mediaplayer.h"
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
@@ -16,8 +17,13 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    int messageLoop(void* arg);
 
 private:
     Ui::MainWindow *ui;
+    int InitSignalsAndSlots();
+    void OnPlayOrPause();
+    MediaPlayer* mp_;
+
 };
 #endif // MAINWINDOW_H
