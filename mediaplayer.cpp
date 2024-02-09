@@ -8,6 +8,8 @@ MediaPlayer::~MediaPlayer()
 {
 }
 
+
+
 int MediaPlayer::create(std::function<int(void*)> msg_loop) {
 	int ret = 0;
 	player_ = new FFPlayer();
@@ -87,6 +89,15 @@ int MediaPlayer::filterMsg(Msg &msg) {
 	case MSG_PREPARED:
 		doPrepared(msg);
 		break;
+	case MSG_EOF:
+		doEOF(msg);
+		break;
+	case MSG_ERROR:
+		doError(msg);
+		break;
+	case MSG_READY:
+		doReady(msg);
+		break;
 	default:
 		break;
 	}
@@ -97,7 +108,28 @@ int MediaPlayer::filterMsg(Msg &msg) {
 int MediaPlayer::doPrepared(Msg &msg) {
 	int ret = 0;
 	state_ = State::Prepared;
-	
+	LOG_INFO("prepared\n");
+	return ret;
+}
+
+int MediaPlayer::doEOF(Msg &msg) {
+	int ret = 0;
+	state_ = State::Eof;
+	LOG_INFO("eof\n");
+	return ret;
+}
+
+int MediaPlayer::doError(Msg &msg) {
+	int ret = 0;
+	state_ = State::Error;
+	LOG_INFO("error\n");
+	return ret;
+}
+
+int MediaPlayer::doReady(Msg &msg) {
+	int ret = 0;
+	state_ = State::Ready;
+	LOG_INFO("ready\n");
 	return ret;
 }
 
@@ -122,6 +154,7 @@ int MediaPlayer::pause() {
 
 int MediaPlayer::stop() {
 	int ret = 0;
+	player_->stop();
 	
 	return ret;
 }

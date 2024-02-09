@@ -99,3 +99,6 @@ install(TARGETS HHHPlayer
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(HHHPlayer)
 endif()
+
+
+add_compile_definitions(ROOT_DIR="${PROJECT_SOURCE_DIR}")

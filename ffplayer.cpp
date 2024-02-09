@@ -19,6 +19,12 @@ int FFPlayer::create() {
 	return ret;
 }
 
+void FFPlayer::notify(int what) {
+	Msg msg;
+	msg.what_ = what;
+	msg_queue_.push(msg);
+}
+
 int FFPlayer::prepareAsync() {
 	int ret = 0;
 	if(url_.empty()) {
@@ -39,20 +45,24 @@ int FFPlayer::prepareAsync() {
 		LOG_ERROR("av_find_best_stream failed");
 		return -1;
 	}
-	msg_queue_.push(Msg( MSG_PREPARED));
-
+	notify( MSG_PREPARED);
+	state_ = FFState::Prepared;
 	return ret;
 }
 
 int FFPlayer::start() {
 	int ret = 0;
 	read_thread_ = new std::thread(&FFPlayer::readPacketLoop, this);
-	msg_queue_.push(Msg( MSG_STARTED));
+	decode_thread_ = new std::thread(&FFPlayer::decodePacketLoop, this);
+	notify( MSG_STARTED);
+	state_ = FFState::Playing;
 	return ret;
 }
 
 int FFPlayer::setDataSource(const std::string& url) {
 	url_ = url;
+	state_ = FFState::Ready;
+	notify(MSG_READY);
 	return 0;
 }
 
@@ -72,12 +82,21 @@ int FFPlayer::blockGetMsg(Msg& msg) {
 
 void FFPlayer::readPacketLoop() {
 	int ret = 0;
-	std::shared_ptr<Packet> pkt_ptr= std::make_shared<Packet>();
-	AVPacket* pkt = pkt_ptr->get();
+	
 	while(1) {
+		mtx_.lock();
+		if(state_ == FFState::Stopped) {
+			mtx_.unlock();
+			return;
+		}
+		mtx_.unlock();
+
+		std::shared_ptr<Packet> pkt_ptr = std::make_shared<Packet>();
+		AVPacket* pkt = pkt_ptr->get();
 		ret = av_read_frame(fmt_ctx_, pkt);
 		if(ret < 0) {
-			LOG_ERROR("av_read_frame failed");
+			av_strerror(ret, errbuf_, sizeof(errbuf_));
+			LOG_ERROR("av_read_frame failed: %s", errbuf_);
 			break;
 		}
 		if(pkt->stream_index == video_stream_index_) {
@@ -90,8 +109,66 @@ void FFPlayer::readPacketLoop() {
 		}
 		packet_queue_.push(pkt_ptr);
 	}
+	mtx_.lock();
+	state_ = FFState::EndOfFile;
+	mtx_.unlock();
+	notify(MSG_EOF);
 }
 
 std::shared_ptr<Packet> FFPlayer::getPacket() {
 	return packet_queue_.pop();
 }
+
+void FFPlayer::decodePacketLoop() {
+	int ret = 0;
+	FILE *fp = fopen(ROOT_DIR "/data/out.h264", "wb");
+	FILE *fp_audio = fopen(ROOT_DIR "/data/out.aac", "wb");
+	while (1) {
+		mtx_.lock();
+		if (state_ == FFState::Stopped) {
+			mtx_.unlock();
+			fclose(fp);
+			fclose(fp_audio);
+			return;
+		}
+		mtx_.unlock();
+
+		if(packet_queue_.empty()) {
+			mtx_.lock();
+			if(state_ == FFState::EndOfFile) {
+				state_ = FFState::EndOfStream;
+				notify(MSG_ENDOFSTREAM);
+				mtx_.unlock();
+				break;
+			}
+			mtx_.unlock();
+		}
+		
+		std::shared_ptr<Packet> pkt_ptr = getPacket();
+		AVPacket* pkt = pkt_ptr->get();
+		if (pkt_ptr->isAudio()) {
+			fwrite(pkt->data, 1, pkt->size, fp_audio);
+		}
+		else if (pkt_ptr->isVideo()) {
+			fwrite(pkt->data, 1, pkt->size, fp);
+		}
+	}
+	fclose(fp);
+	fclose(fp_audio);
+}
+
+int FFPlayer::stop() {
+	int ret = 0;
+	mtx_.lock();
+	state_ = FFState::Stopped;
+	mtx_.unlock();
+	
+	packet_queue_.abort();
+	read_thread_->join();
+	decode_thread_->join();
+	read_thread_ = nullptr;
+	decode_thread_ = nullptr;
+	notify(MSG_STOP);
+	return ret;
+}
+

@@ -17,8 +17,19 @@ public:
 	BufferQueue(size_t mx_size);
 	~BufferQueue();
 
+	void abort() {
+		mutex_.lock();
+		while(!queue_.empty())
+			queue_.pop();
+		mutex_.unlock();
+	}
+
 	size_t getSize() {
 		return queue_.size();
+	}
+
+	bool empty() {
+		return queue_.empty();
 	}
 
 	void push(const T &msg);

@@ -74,3 +74,4 @@ CMakeLists.txt.user*
 
 .vs
 out
+data

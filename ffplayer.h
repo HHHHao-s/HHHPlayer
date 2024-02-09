@@ -38,6 +38,14 @@ public:
 		is_audio_ = 1;
 		is_video_ = 0;
 	}
+
+	int isVideo() {
+		return is_video_;
+	}
+
+	int isAudio() {
+		return is_audio_;
+	}
 private:
 	AVPacket* pkt;
 	int is_video_{ 0 };
@@ -55,23 +63,45 @@ public:
 	int tryGetMsg(Msg &msg);
 	int blockGetMsg(Msg &msg);
 	int start();
+	int stop();
+	//int destory();
+
+	void decodePacketLoop();
 
 	void readPacketLoop();
 
 	std::shared_ptr<Packet> getPacket();
 
 private:
+
+	void notify(int what);
+
 	std::string url_;
 	MsgQueue msg_queue_;
 	BufferQueue<std::shared_ptr<Packet>> packet_queue_;
+	std::mutex mtx_;
 	std::thread* read_thread_{nullptr};
+	std::thread* decode_thread_{nullptr};
 	
 	AVFormatContext* fmt_ctx_{nullptr};
 	AVCodec* video_codec_{nullptr};
 	AVCodec* audio_codec_{nullptr};
 	int video_stream_index_ = -1;
 	int audio_stream_index_ = -1;
+
+	char errbuf_[1024];
 	
+	enum class FFState
+	{
+		Prepared,
+		Ready,
+		Playing,
+		EndOfFile,
+		EndOfStream,
+		Stopped,
+		Pause,
+
+	}state_;
 
 };
 

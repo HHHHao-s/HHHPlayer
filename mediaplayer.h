@@ -37,13 +37,24 @@ private:
 	std::function<int(void*)> msg_loop_; // message loop
 	std::thread* msg_thread_{ nullptr };
 	std::string url_{};
-	int doPrepared(Msg &msg);
+	
 	enum class State {
 		Idle,
-		Preparing,
 		Prepared,
+		Ready,
 		Playing,
+		Eof,
+		Error,
+
 	}state_{State::Idle};
 	// filter those message that no need to send to ui
 	int filterMsg(Msg& msg);
+
+	int doPrepared(Msg& msg);
+	int doEOF(Msg& msg);
+	int doError(Msg& msg);
+	int doEOS(Msg& msg);
+	int doReady(Msg& msg);
+	
+
 };
