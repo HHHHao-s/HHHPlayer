@@ -41,6 +41,7 @@ private:
 	enum class State {
 		Idle,
 		Prepared,
+		Preparing,
 		Ready,
 		Playing,
 		Eof,

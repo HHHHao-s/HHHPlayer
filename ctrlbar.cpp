@@ -1,6 +1,6 @@
 #include "ctrlbar.h"
 #include "ui_ctrlbar.h"
-#include <QDebug>
+
 CtrlBar::CtrlBar(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::CtrlBar)
@@ -28,6 +28,7 @@ CtrlBar::~CtrlBar()
 void CtrlBar::on_playBtn_clicked()
 {
     qDebug() << "on_playBtn_clicked";
+    
     emit SigPlayOrPause();
 }
 

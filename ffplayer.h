@@ -12,6 +12,19 @@ extern "C" {
 #include "libavcodec/bsf.h"
 }
 
+enum class FFState
+{
+	Idle,
+	Prepared,
+	Ready,
+	Playing,
+	EndOfFile,
+	EndOfStream,
+	Stopped,
+	Pause,
+
+};
+
 class Packet {
 public:
 	
@@ -20,7 +33,7 @@ public:
 		if (!pkt) {
 			LOG_ERROR("av_packet_alloc failed");
 		}
-		av_init_packet(pkt);
+		
 	}
 	~Packet() {
 		if (pkt) {
@@ -52,7 +65,76 @@ private:
 	int is_audio_{ 0 };
 };// packet
 
-class FFPlayer 
+struct Frame {
+	int is_video_{ 0 };
+	int is_audio_{ 0 };
+	double pts_{ 0.0 };
+	double duration_{ 0.0 };
+	AVFrame* frame_{ nullptr };
+	Frame() {
+		frame_ = av_frame_alloc();
+	}
+	Frame(AVFrame *frame) :frame_(frame) {
+		
+	}
+	~Frame() {
+		if (frame_) {
+			av_frame_free(&frame_);
+		}
+	}
+	/*Frame(const Frame&) = delete;
+	Frame& operator=(const Frame&) = delete;
+	Frame(Frame&& other) = delete;
+	Frame& operator=(Frame&& other) = delete;*/
+
+	
+
+};
+
+class Decoder {
+public:
+	Decoder(AVFormatContext * fmt_ctx,AVMediaType media_type, BufferQueue<std::shared_ptr<Packet>>* queue):media_type_(media_type), packet_queue_(queue){
+		if (open_codec_context(&stream_index_, &codec_ctx_, fmt_ctx, media_type) >= 0) {
+			;
+		}
+		else {
+			LOG_INFO("open_codec_context failed");
+		}
+	}
+	~Decoder() {
+		if (codec_ctx_) {
+			avcodec_free_context(&codec_ctx_);
+		}
+	}
+
+	void setPacketQueue(BufferQueue<std::shared_ptr<Packet>>* queue) {
+		packet_queue_ = queue;
+	}
+
+	int getFrame(std::shared_ptr<Frame>& frame);
+
+
+
+private:
+	AVCodecContext* codec_ctx_{nullptr};
+	AVCodec* codec_{ nullptr };
+	AVMediaType media_type_{ AVMEDIA_TYPE_UNKNOWN };
+	int stream_index_{ -1 };
+	BufferQueue<std::shared_ptr<Packet>>* packet_queue_{ nullptr };
+	BufferQueue<std::shared_ptr<Frame>> frame_queue_;
+
+	FFState *state_{ nullptr };
+
+	char errbuf_[128] = {};
+
+	int open_codec_context(int* stream_idx,
+		AVCodecContext** dec_ctx, AVFormatContext* fmt_ctx, enum AVMediaType type);
+	
+};
+
+
+
+class FFPlayer
 {
 public:
 	FFPlayer();
@@ -66,11 +148,13 @@ public:
 	int stop();
 	//int destory();
 
-	void decodePacketLoop();
+	void decodePacketLoop(int );
 
 	void readPacketLoop();
 
-	std::shared_ptr<Packet> getPacket();
+	//std::shared_ptr<Packet> getPacket();
+
+
 
 private:
 
@@ -78,31 +162,29 @@ private:
 
 	std::string url_;
 	MsgQueue msg_queue_;
-	BufferQueue<std::shared_ptr<Packet>> packet_queue_;
+	BufferQueue<std::shared_ptr<Packet>> audio_packet_queue_;
+	BufferQueue<std::shared_ptr<Packet>> video_packet_queue_;
+
+	
 	std::mutex mtx_;
 	std::thread* read_thread_{nullptr};
-	std::thread* decode_thread_{nullptr};
+	std::thread* audio_decode_thread_{ nullptr };
+	std::thread* video_decode_thread_{ nullptr };
 	
 	AVFormatContext* fmt_ctx_{nullptr};
 	AVCodec* video_codec_{nullptr};
 	AVCodec* audio_codec_{nullptr};
-	int video_stream_index_ = -1;
-	int audio_stream_index_ = -1;
+	int video_stream_index_{ -1 };
+	int audio_stream_index_{ -1 };
 
-	char errbuf_[1024];
+	char errbuf_[128] = {};
 	
-	enum class FFState
-	{
-		Prepared,
-		Ready,
-		Playing,
-		EndOfFile,
-		EndOfStream,
-		Stopped,
-		Pause,
+	FFState	state_{ FFState::Idle};
+	Decoder* video_decoder_{ nullptr };
+	Decoder* audio_decoder_{ nullptr };
 
-	}state_;
-
+	BufferQueue<std::shared_ptr<Frame>> video_frame_queue_;
+	BufferQueue<std::shared_ptr<Frame>> audio_frame_queue_;
 };
 
 
