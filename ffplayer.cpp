@@ -57,7 +57,10 @@ int FFPlayer::prepareAsync() {
 	swr_ = new SWSResampler();
 	swr_->setOpts(codec_ctx->ch_layout, codec_ctx->ch_layout, codec_ctx->sample_rate, codec_ctx->sample_rate, codec_ctx->sample_fmt, (AVSampleFormat)AV_SAMPLE_FMT_FLT);
 
-	
+	sdl_player_ = new SDLPlayer();
+	sdl_player_->openAudio(codec_ctx);
+
+
 	notify( MSG_PREPARED);
 	state_ = FFState::Prepared;
 	return ret;
@@ -73,6 +76,9 @@ int FFPlayer::start() {
 	
 	audio_decode_thread_ = new std::thread(std::bind(&FFPlayer::decodePacketLoop, this, 1));
 	video_decode_thread_ = new std::thread(std::bind(&FFPlayer::decodePacketLoop, this, 0));
+
+	sdl_player_->playAudio();
+
 	notify( MSG_STARTED);
 	state_ = FFState::Playing;
 	return ret;
@@ -167,8 +173,13 @@ int FFPlayer::stop() {
 	video_decode_thread_ = nullptr;
 	audio_decoder_ = nullptr;
 	video_decoder_ = nullptr;
-
 	read_thread_ = nullptr;
+
+	delete swr_;
+	delete sdl_player_;
+	swr_ = nullptr;
+	sdl_player_ = nullptr;
+
 
 	notify(MSG_STOP);
 	return ret;
@@ -247,15 +258,7 @@ void FFPlayer::decodePacketLoop(int is_audio) {
 	int ret = 0;
 	std::shared_ptr<Frame> f;
 
-	const char * file_name = "after.pcm";
-	const char * file_name2 = "before.pcm";
-	FILE * file = fopen(file_name, "wb");
-	FILE* file2 = fopen(file_name2, "wb");
-	if (!file) {
-		LOG_ERROR("Could not open file %s\n", file_name);
-		return;
-	}
-
+	
 	while(1) {
 		mtx_.lock();
 		if(state_ == FFState::Stopped) {
@@ -271,18 +274,17 @@ void FFPlayer::decodePacketLoop(int is_audio) {
 		} else {
 			if(audio_decoder_->getFrame(f) == 0) {
 				//audio_frame_queue_.push(f);
-				fwrite((const void*)f->frame_->data[0], 1, f->frame_->linesize[0], file2);
+				uint8_t** data;
+				int size = swr_->convert(f->frame_, &data);
+				sdl_player_->queueAudio(data[0], size);
 
-				uint8_t ** out;
-				int len = swr_->convert(f->frame_, (uint8_t***) & out);
-				fwrite((const void* )out[0], 1, len, file);
-				LOG_INFO("write audio frame");
+				LOG_INFO("queue audio frame");
 
 			}
 		}
 		
 	}
-	fclose(file);
+
 }
 
 int Decoder::open_codec_context(int* stream_idx,
@@ -419,4 +421,71 @@ int SWSResampler::convert(AVFrame* frame, uint8_t*** data) {
 	*data = dst_data_;
 
 	return dst_bufsize;
+}
+
+int SDLPlayer::openAudio(AVCodecContext* codec_ctx)
+{
+	desired_spec_.freq = codec_ctx->sample_rate;
+	switch (codec_ctx->sample_fmt) {
+		case AV_SAMPLE_FMT_U8:
+			desired_spec_.format = AUDIO_U8;
+			break;
+		case AV_SAMPLE_FMT_S16:
+			desired_spec_.format = AUDIO_S16SYS;
+			break;
+		case AV_SAMPLE_FMT_S32:
+			desired_spec_.format = AUDIO_S32SYS;
+			break;
+		case AV_SAMPLE_FMT_FLT:
+			desired_spec_.format = AUDIO_F32SYS;
+			break;
+		case AV_SAMPLE_FMT_FLTP:
+			desired_spec_.format = AUDIO_F32SYS;
+			break;
+		default:
+			LOG_ERROR("unsupported sample format");
+			return -1;
+
+	}
+	desired_spec_.channels = codec_ctx->ch_layout.nb_channels;
+	desired_spec_.silence = 0;
+	desired_spec_.samples = codec_ctx->frame_size;
+	desired_spec_.callback = NULL;
+
+	dev_ = SDL_OpenAudioDevice(NULL, 0, &desired_spec_, NULL, SDL_AUDIO_ALLOW_ANY_CHANGE);
+	if (dev_ < 2) {
+		LOG_ERROR("SDL_OpenAudioDevice failed");
+		return -1;
+	}
+
+
+	// zero: play, non-zero: pause
+	SDL_PauseAudioDevice(dev_, 1);
+
+	return 0;
+}
+
+int SDLPlayer::queueAudio(uint8_t* data, int size)
+{
+	return SDL_QueueAudio(dev_, data, size);
+}
+
+int SDLPlayer::pauseAudio()
+{
+	SDL_PauseAudioDevice(dev_, 1);
+	return 0;
+}
+
+int SDLPlayer::stopAudio()
+{
+	SDL_CloseAudioDevice(dev_);
+	dev_=-1;
+
+	return 0;
+}
+
+int SDLPlayer::playAudio()
+{
+	SDL_PauseAudioDevice(dev_, 0);
+	return 0;
 }

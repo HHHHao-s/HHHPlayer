@@ -102,10 +102,29 @@ struct Frame {
 class SDLPlayer {
 public:
 
+	SDLPlayer() {
+		if (SDL_Init(SDL_INIT_AUDIO)) {
+			LOG_ERROR("SDL_Init failed");
+		}
+	}
+	~SDLPlayer() {
+		if (dev_ != 0) {
+			SDL_CloseAudioDevice(dev_);
+			SDL_Quit();
+		}
+		
+	}
+	int openAudio(AVCodecContext* codec_ctx);
+	int queueAudio(uint8_t* data, int size);
+	int pauseAudio();
+	int stopAudio();
+	int playAudio();
+
 private:
 
 	SDL_AudioSpec desired_spec_;
-
+	int playing_{ 0 };
+	SDL_AudioDeviceID dev_{ 0 };
 };
 
 class SWSResampler {
@@ -128,6 +147,9 @@ public:
 	// the old data can't be used if convert success
 	// return the size of the new data
 	int convert(AVFrame* frame, uint8_t*** data);
+
+	
+
 private:
 	SwrContext* swr_ctx_{ nullptr };
 	AVChannelLayout src_ch_layout_;
@@ -240,5 +262,7 @@ private:
 	BufferQueue<std::shared_ptr<Frame>> audio_frame_queue_;
 
 	SWSResampler* swr_{ nullptr };
+
+	SDLPlayer* sdl_player_{ nullptr };
 };
 

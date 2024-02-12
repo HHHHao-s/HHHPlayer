@@ -29,7 +29,7 @@ void MainWindow::OnPlayOrPause() {
             mp_ = nullptr;
             return;
         }
-        mp_->setDataSource(ROOT_DIR  "/data/video.mp4");
+        mp_->setDataSource(ROOT_DIR  "/data/sync.mp4");
         ret = mp_->prepareAsync();
         if(ret<0){
 			LOG_ERROR("prepareAsync failed");
