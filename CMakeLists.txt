@@ -66,9 +66,15 @@ INCLUDE_DIRECTORIES(
 
 target_link_libraries(HHHPlayer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 
-set(LIBS  avcodec avformat swscale avdevice avutil avfilter swresample postproc)
-set(LINK_DIR ${PROJECT_SOURCE_DIR}/thirdParty/ffmpeg/lib)
-set(INCLUDE_DIR ${PROJECT_SOURCE_DIR}/thirdParty/ffmpeg/include)
+set(LIBS SDL2 avcodec avformat swscale avdevice avutil avfilter swresample postproc)
+set(LINK_DIR
+    ${PROJECT_SOURCE_DIR}/thirdParty/ffmpeg/lib
+    ${PROJECT_SOURCE_DIR}/thirdParty/SDL2/lib/x64
+)
+
+set(INCLUDE_DIR 
+    ${PROJECT_SOURCE_DIR}/thirdParty/ffmpeg/include
+    ${PROJECT_SOURCE_DIR}/thirdParty/SDL2/include)
 
 target_link_directories(HHHPlayer PRIVATE ${LINK_DIR})
 target_include_directories(HHHPlayer PRIVATE ${INCLUDE_DIR})
