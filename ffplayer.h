@@ -7,6 +7,7 @@
 #include "logger.h"
 #include "bufferqueue.h"
 #include "portaudioplayer.h"
+#include "imagescaler.h"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -155,6 +156,7 @@ public:
 	int create();
 	int prepareAsync();
 	int setDataSource(const std::string &url);
+	int setVideoFrameCallback(std::function<void(std::shared_ptr<Frame>)> cb);
 	int tryGetMsg(Msg &msg);
 	int blockGetMsg(Msg &msg);
 	int start();
@@ -202,5 +204,9 @@ private:
 	SWSResampler* swr_{ nullptr };
 
 	PortAudioPlayer* audio_player_{ nullptr };
+
+	ImageScaler* image_scaler_{ nullptr };
+
+	std::function<void(std::shared_ptr<Frame>)> video_frame_cb_{ nullptr };
 };
 

@@ -67,7 +67,7 @@ struct Frame {
 	double duration_{ 0.0 };
 	AVFrame* frame_{ nullptr };
 	Frame() {
-		frame_ = av_frame_alloc();
+		
 	}
 	Frame(AVFrame* frame) :frame_(frame) {
 
@@ -126,8 +126,10 @@ public:
 
 	T pop();
 
+	T tryPop();
+
 private:
-	size_t mx_{30};
+	size_t mx_{512};
 	std::queue<T> queue_;
 	std::mutex mutex_;
 	std::condition_variable full_cond_;
@@ -195,4 +197,26 @@ T BufferQueue<T>::pop()
 	}
 
 	return item;
+}
+
+template<typename T>
+T BufferQueue<T>::tryPop()
+{
+	std::unique_lock<std::mutex> lock(mutex_);
+	if (!queue_.empty())
+	{
+
+		T item = std::move(queue_.front());
+		queue_.pop();
+
+		if (queue_.size() == mx_ - 1) {
+			lock.unlock();
+			full_cond_.notify_one();
+		}
+		else {
+			lock.unlock();
+		}
+		return item;
+	}
+	return T();
 }

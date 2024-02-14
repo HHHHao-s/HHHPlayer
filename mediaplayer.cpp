@@ -31,7 +31,14 @@ int MediaPlayer::setDataSource(const std::string & url) {
 	}
 	url_ = url;
 	ret = player_->setDataSource(url);
+	
 	return ret;
+}
+
+int MediaPlayer::setVideoFrameCallback(std::function<void(std::shared_ptr<Frame>)> cb)
+{
+	player_->setVideoFrameCallback(cb);
+	return 0;
 }
 
 int MediaPlayer::prepareAsync() {

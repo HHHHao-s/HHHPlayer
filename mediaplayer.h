@@ -22,6 +22,7 @@ public:
 	
 	int create(std::function<int(void*)> msg_loop);
 	int setDataSource(const std::string& url);
+	int setVideoFrameCallback(std::function<void(std::shared_ptr<Frame>)> cb);
 	int prepareAsync();
 	int tryGetMsg(Msg& msg);
 	int blockGetMsg(Msg& msg);

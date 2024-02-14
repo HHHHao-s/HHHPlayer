@@ -32,6 +32,8 @@ set(PROJECT_SOURCES
         bufferqueue.cpp
         portaudioplayer.cpp
         portaudioplayer.h
+        imagescaler.cpp
+        imagescaler.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

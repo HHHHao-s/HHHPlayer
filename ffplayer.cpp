@@ -36,6 +36,12 @@ int FFPlayer::prepareAsync() {
 		LOG_ERROR("avformat_open_input failed");
 		return -1;
 	}
+
+	if (avformat_find_stream_info(fmt_ctx_, NULL) < 0) {
+		LOG_ERROR("avformat_find_stream_info failed");
+		return -1;
+	}
+	
 	video_stream_index_ = av_find_best_stream(fmt_ctx_, AVMEDIA_TYPE_VIDEO, -1, -1, (const AVCodec**)&video_codec_, 0);
 	if(video_stream_index_ < 0) {
 		LOG_ERROR("av_find_best_stream failed");
@@ -51,14 +57,21 @@ int FFPlayer::prepareAsync() {
 	audio_decoder_ = new Decoder(fmt_ctx_, AVMEDIA_TYPE_AUDIO, &audio_packet_queue_);
 	video_decoder_ = new Decoder(fmt_ctx_, AVMEDIA_TYPE_VIDEO, &video_packet_queue_);
 
-	auto codec_ctx = audio_decoder_->getCodecCtx();
+	auto audio_codec_ctx = audio_decoder_->getCodecCtx();
 
 	AVStream* st = fmt_ctx_->streams[audio_stream_index_];
 	swr_ = new SWSResampler();
-	swr_->setOpts(codec_ctx->ch_layout, codec_ctx->ch_layout, codec_ctx->sample_rate, codec_ctx->sample_rate, codec_ctx->sample_fmt, (AVSampleFormat)AV_SAMPLE_FMT_FLT);
+	swr_->setOpts(audio_codec_ctx->ch_layout, audio_codec_ctx->ch_layout, audio_codec_ctx->sample_rate, audio_codec_ctx->sample_rate, audio_codec_ctx->sample_fmt, (AVSampleFormat)AV_SAMPLE_FMT_FLT);
 
 	audio_player_ = new PortAudioPlayer();
-	audio_player_->openAudio(codec_ctx);
+	audio_player_->openAudio(audio_codec_ctx);
+
+
+	
+	auto video_codec_ctx = video_decoder_->getCodecCtx();
+
+	image_scaler_ = new ImageScaler();
+	image_scaler_->open(video_codec_ctx->width, video_codec_ctx->height, video_codec_ctx->pix_fmt, video_codec_ctx->width, video_codec_ctx->height, AV_PIX_FMT_RGB24);
 
 	
 
@@ -90,6 +103,12 @@ int FFPlayer::setDataSource(const std::string& url) {
 	url_ = url;
 	state_ = FFState::Ready;
 	notify(MSG_READY);
+	return 0;
+}
+
+int FFPlayer::setVideoFrameCallback(std::function<void(std::shared_ptr<Frame>)> cb)
+{
+	video_frame_cb_ = cb;
 	return 0;
 }
 
@@ -272,6 +291,18 @@ void FFPlayer::decodePacketLoop(int is_audio) {
 			if(video_decoder_->getFrame(f) == 0) {
 				//video_frame_queue_.push(f);
 				LOG_INFO("drop video frame");
+
+				//auto scale_frame = std::make_shared<Frame>();
+				AVFrame* scale_frame = nullptr;
+
+				image_scaler_->scale(f->frame_, &scale_frame);
+
+				video_frame_cb_(std::make_shared<Frame>(scale_frame));
+
+				std::this_thread::sleep_for(std::chrono::milliseconds(40));
+
+
+
 			}
 		} else {
 			if(audio_decoder_->getFrame(f) == 0) {
