@@ -57,8 +57,10 @@ int FFPlayer::prepareAsync() {
 	swr_ = new SWSResampler();
 	swr_->setOpts(codec_ctx->ch_layout, codec_ctx->ch_layout, codec_ctx->sample_rate, codec_ctx->sample_rate, codec_ctx->sample_fmt, (AVSampleFormat)AV_SAMPLE_FMT_FLT);
 
-	sdl_player_ = new SDLPlayer();
-	sdl_player_->openAudio(codec_ctx);
+	audio_player_ = new PortAudioPlayer();
+	audio_player_->openAudio(codec_ctx);
+
+	
 
 
 	notify( MSG_PREPARED);
@@ -77,7 +79,7 @@ int FFPlayer::start() {
 	audio_decode_thread_ = new std::thread(std::bind(&FFPlayer::decodePacketLoop, this, 1));
 	video_decode_thread_ = new std::thread(std::bind(&FFPlayer::decodePacketLoop, this, 0));
 
-	sdl_player_->playAudio();
+	audio_player_->playAudio();
 
 	notify( MSG_STARTED);
 	state_ = FFState::Playing;
@@ -176,9 +178,9 @@ int FFPlayer::stop() {
 	read_thread_ = nullptr;
 
 	delete swr_;
-	delete sdl_player_;
+	delete audio_player_;
 	swr_ = nullptr;
-	sdl_player_ = nullptr;
+	audio_player_ = nullptr;
 
 
 	notify(MSG_STOP);
@@ -274,12 +276,19 @@ void FFPlayer::decodePacketLoop(int is_audio) {
 		} else {
 			if(audio_decoder_->getFrame(f) == 0) {
 				//audio_frame_queue_.push(f);
-				uint8_t** data;
+				/*uint8_t** data;
 				int size = swr_->convert(f->frame_, &data);
-				sdl_player_->queueAudio(data[0], size);
+				
+				auto msg = std::make_shared<RawMessage>();
 
-				LOG_INFO("queue audio frame");
+				msg->raw_ = new uint8_t[size];
+				memcpy(msg->raw_, data[0], size);
+				msg->size_ = size;
 
+				audio_frame_queue_.push(msg);
+
+				LOG_INFO("queue audio frame");*/
+				audio_player_->enqueue(f);
 			}
 		}
 		

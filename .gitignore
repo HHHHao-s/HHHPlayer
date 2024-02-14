@@ -69,8 +69,8 @@ CMakeLists.txt.user*
 
 # Binaries
 # --------
-*.dll
-*.exe
+
+
 
 .vs
 out

@@ -30,6 +30,8 @@ set(PROJECT_SOURCES
         logger.h
         bufferqueue.h
         bufferqueue.cpp
+        portaudioplayer.cpp
+        portaudioplayer.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -66,19 +68,25 @@ INCLUDE_DIRECTORIES(
 
 target_link_libraries(HHHPlayer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 
-set(LIBS SDL2 avcodec avformat swscale avdevice avutil avfilter swresample postproc)
+set(LIBS portaudio_x64 SDL2 avcodec avformat swscale avdevice avutil avfilter swresample postproc)
 set(LINK_DIR
     ${PROJECT_SOURCE_DIR}/thirdParty/ffmpeg/lib
     ${PROJECT_SOURCE_DIR}/thirdParty/SDL2/lib/x64
+    ${PROJECT_SOURCE_DIR}/thirdParty/PortAudio/lib
+
+
 )
 
 set(INCLUDE_DIR 
     ${PROJECT_SOURCE_DIR}/thirdParty/ffmpeg/include
-    ${PROJECT_SOURCE_DIR}/thirdParty/SDL2/include)
+    ${PROJECT_SOURCE_DIR}/thirdParty/SDL2/include
+    ${PROJECT_SOURCE_DIR}/thirdParty/PortAudio/include
+)
 
 target_link_directories(HHHPlayer PRIVATE ${LINK_DIR})
 target_include_directories(HHHPlayer PRIVATE ${INCLUDE_DIR})
 target_link_libraries(HHHPlayer PRIVATE ${LIBS})
+
 
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

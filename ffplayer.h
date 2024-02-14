@@ -6,6 +6,8 @@
 #include "msgqueue.h"
 #include "logger.h"
 #include "bufferqueue.h"
+#include "portaudioplayer.h"
+
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
@@ -33,71 +35,7 @@ enum class FFState
 
 };
 
-class Packet {
-public:
-	
-	
-	Packet():pkt(av_packet_alloc()) {
-		if (!pkt) {
-			LOG_ERROR("av_packet_alloc failed");
-		}
-		
-	}
-	~Packet() {
-		if (pkt) {
-			av_packet_free(&pkt);
-		}
-	}
-	AVPacket* get() {
-		return pkt;
-	}
-	void setVideo() {
-		is_video_ = 1;
-		is_audio_ = 0;
-	}
-	void setAudio() {
-		is_audio_ = 1;
-		is_video_ = 0;
-	}
 
-	int isVideo() {
-		return is_video_;
-	}
-
-	int isAudio() {
-		return is_audio_;
-	}
-private:
-	AVPacket* pkt;
-	int is_video_{ 0 };
-	int is_audio_{ 0 };
-};// packet
-
-struct Frame {
-	int is_video_{ 0 };
-	int is_audio_{ 0 };
-	double pts_{ 0.0 };
-	double duration_{ 0.0 };
-	AVFrame* frame_{ nullptr };
-	Frame() {
-		frame_ = av_frame_alloc();
-	}
-	Frame(AVFrame *frame) :frame_(frame) {
-		
-	}
-	~Frame() {
-		if (frame_) {
-			av_frame_free(&frame_);
-		}
-	}
-	/*Frame(const Frame&) = delete;
-	Frame& operator=(const Frame&) = delete;
-	Frame(Frame&& other) = delete;
-	Frame& operator=(Frame&& other) = delete;*/
-
-	
-
-};
 
 class SDLPlayer {
 public:
@@ -259,10 +197,10 @@ private:
 	Decoder* audio_decoder_{ nullptr };
 
 	BufferQueue<std::shared_ptr<Frame>> video_frame_queue_;
-	BufferQueue<std::shared_ptr<Frame>> audio_frame_queue_;
+	
 
 	SWSResampler* swr_{ nullptr };
 
-	SDLPlayer* sdl_player_{ nullptr };
+	PortAudioPlayer* audio_player_{ nullptr };
 };
 
