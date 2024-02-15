@@ -171,3 +171,8 @@ int MediaPlayer::destroy() {
 	
 	return ret;
 }
+
+std::function<double()> MediaPlayer::getCurTimeCb()
+{
+	return player_->getCurTimeCb();
+}

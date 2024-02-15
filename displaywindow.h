@@ -19,6 +19,10 @@ public:
     
     void enqueueFrame(std::shared_ptr<Frame> f);
 
+    void setGetCurTime(std::function<double()> get_cur_time) {
+		get_cur_time_ = get_cur_time;
+	}
+
 protected:
     void paintEvent(QPaintEvent *event) override;
 
@@ -27,6 +31,12 @@ private:
     BufferQueue<std::shared_ptr<Frame>> queue_;
 
     Ui::DisplayWindow *ui;
+
+    std::function<double()> get_cur_time_{nullptr};
+
+    QImage image_;
+
+    int droped_frames_{0};
 };
 
 #endif // DISPLAYWINDOW_H

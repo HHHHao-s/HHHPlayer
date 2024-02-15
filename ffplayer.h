@@ -112,6 +112,7 @@ public:
 		else {
 			LOG_INFO("open_codec_context failed");
 		}
+		time_base_ = fmt_ctx->streams[stream_index_]->time_base;
 	}
 	~Decoder() {
 		if (codec_ctx_) {
@@ -144,6 +145,8 @@ private:
 	int open_codec_context(int* stream_idx,
 		AVCodecContext** dec_ctx, AVFormatContext* fmt_ctx, enum AVMediaType type);
 	
+	AVRational time_base_;
+
 };
 
 
@@ -168,7 +171,7 @@ public:
 	void readPacketLoop();
 
 	//std::shared_ptr<Packet> getPacket();
-
+	std::function<double()> getCurTimeCb();
 
 
 private:

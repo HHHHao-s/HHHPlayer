@@ -164,6 +164,11 @@ void FFPlayer::readPacketLoop() {
 	notify(MSG_EOF);
 }
 
+std::function<double()> FFPlayer::getCurTimeCb()
+{
+	return std::bind(&PortAudioPlayer::getClock, audio_player_);
+}
+
 
 
 
@@ -256,8 +261,8 @@ int Decoder::getFrame(std::shared_ptr<Frame>&f) {
 			ftmp = std::make_shared<Frame>(frame);
 			ftmp->is_audio_ = pkt->isAudio();
 			ftmp->is_video_ = pkt->isVideo();
-			ftmp->duration_ = frame->pkt_duration * av_q2d(frame->time_base);
-			ftmp->pts_ = frame->pts * av_q2d(frame->time_base);
+			ftmp->duration_ = frame->pkt_duration * av_q2d(time_base_);
+			ftmp->pts_ = frame->pts * av_q2d(time_base_);
 			frame_queue_.push(ftmp);
 			send_ret = 1;
 			break;
@@ -290,22 +295,27 @@ void FFPlayer::decodePacketLoop(int is_audio) {
 		if (!is_audio) {
 			if(video_decoder_->getFrame(f) == 0) {
 				//video_frame_queue_.push(f);
-				LOG_INFO("drop video frame");
+				LOG_INFO("get video frame");
 
 				//auto scale_frame = std::make_shared<Frame>();
 				AVFrame* scale_frame = nullptr;
 
 				image_scaler_->scale(f->frame_, &scale_frame);
+				auto pscale_frame = std::make_shared<Frame>(scale_frame);
+				pscale_frame->is_video_ = 1;
+				pscale_frame->duration_ = f->duration_;
+				pscale_frame->pts_ = f->pts_;
 
-				video_frame_cb_(std::make_shared<Frame>(scale_frame));
+				video_frame_cb_(pscale_frame);
 
-				std::this_thread::sleep_for(std::chrono::milliseconds(40));
+				//std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
 
 
 			}
 		} else {
 			if(audio_decoder_->getFrame(f) == 0) {
+				LOG_INFO("get audio frame");
 				//audio_frame_queue_.push(f);
 				/*uint8_t** data;
 				int size = swr_->convert(f->frame_, &data);
@@ -320,6 +330,7 @@ void FFPlayer::decodePacketLoop(int is_audio) {
 
 				LOG_INFO("queue audio frame");*/
 				audio_player_->enqueue(f);
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			}
 		}
 		

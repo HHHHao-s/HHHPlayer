@@ -30,7 +30,7 @@ public:
 	int pause();
 	int stop();
 	int destroy();
-
+	std::function<double()> getCurTimeCb();
 	
 private:
 	std::mutex mutex_;

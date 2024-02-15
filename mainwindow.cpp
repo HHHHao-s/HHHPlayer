@@ -29,9 +29,10 @@ void MainWindow::OnPlayOrPause() {
             mp_ = nullptr;
             return;
         }
-        mp_->setDataSource(ROOT_DIR  "/data/video.mp4");
+        mp_->setDataSource(ROOT_DIR  "/data/sync.mp4");
         auto displaywindow = ui->showWindow;
         mp_->setVideoFrameCallback(std::bind(&DisplayWindow::enqueueFrame, displaywindow, std::placeholders::_1));
+
         ret = mp_->prepareAsync();
         if(ret<0){
 			LOG_ERROR("prepareAsync failed");
@@ -39,6 +40,8 @@ void MainWindow::OnPlayOrPause() {
             mp_ = nullptr;
 			return;
 		}
+
+        displaywindow->setGetCurTime(mp_->getCurTimeCb());
 
     }
     return;

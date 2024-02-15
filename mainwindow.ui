@@ -116,21 +116,7 @@
    <attribute name="dockWidgetArea">
     <number>2</number>
    </attribute>
-   <widget class="PlayListWindow" name="playListContent">
-    <widget class="QLabel" name="label_4">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>150</y>
-       <width>49</width>
-       <height>14</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>TextLabel</string>
-     </property>
-    </widget>
-   </widget>
+   <widget class="PlayListWindow" name="playListContent"/>
   </widget>
   <widget class="QDockWidget" name="titleDockWidget">
    <property name="enabled">

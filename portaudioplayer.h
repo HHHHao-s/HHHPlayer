@@ -40,7 +40,7 @@ public:
 
     double getClock() {
         
-		return audio_clock_;
+		return Pa_GetStreamTime(stream_) - start_time_;
 	}
 private:
     BufferQueue<std::shared_ptr<Frame>>queue_;
@@ -49,6 +49,7 @@ private:
     uint8_t buffer_[(1 << 13)];
     size_t buffer_size_{ 0 };
     size_t pos_{ 0 };
+    std::atomic<double> start_time_{ 0 };
     std::atomic<double> audio_clock_{ 0 };
 
 };

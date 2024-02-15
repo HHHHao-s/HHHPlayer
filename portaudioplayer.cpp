@@ -43,7 +43,9 @@ int PortAudioPlayer::playCallback(const void* inputBuffer, void* outputBuffer, u
 	LOG_INFO("now:%lf out_time:%lf\n", now, timeInfo->outputBufferDacTime);
 
 	audio_clock_ = timeInfo->outputBufferDacTime;
-
+	if (start_time_ == 0) {
+		start_time_ = audio_clock_.load();
+	}
 
 	return paContinue;
 }
@@ -103,6 +105,8 @@ int PortAudioPlayer::openAudio(AVCodecContext* codec_ctx)
 		LOG_ERROR("PortAudio error: %s\n", Pa_GetErrorText(err));
 		return -1;
 	}
+
+	
 
 	return 0;
 
