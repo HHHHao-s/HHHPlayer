@@ -120,20 +120,22 @@ int PortAudioPlayer::pauseAudio()
 		LOG_ERROR("PortAudio error: %s\n", Pa_GetErrorText(err));
 		return -1;
 	}
-
+	elapsed_ = Pa_GetStreamTime(stream_) - start_time_;
 	return 0;
 }
 
 int PortAudioPlayer::stopAudio()
 {
-
+	if (Pa_IsStreamStopped(stream_)) {
+		return 0;
+	}
 	PaError err = Pa_StopStream(stream_);
 	if (err != paNoError)
 	{
 		LOG_ERROR("PortAudio error: %s\n", Pa_GetErrorText(err));
 		return -1;
 	}
-
+	
 
 	return 0;
 }
@@ -146,5 +148,17 @@ int PortAudioPlayer::playAudio()
 		LOG_ERROR("PortAudio error: %s\n", Pa_GetErrorText(err));
 		return -1;
 	}
+	return 0;
+}
+
+int PortAudioPlayer::resumeAudio()
+{
+	PaError err = Pa_StartStream(stream_);
+	if (err != paNoError)
+	{
+		LOG_ERROR("PortAudio error: %s\n", Pa_GetErrorText(err));
+		return -1;
+	}
+	start_time_ = Pa_GetStreamTime(stream_) - elapsed_;
 	return 0;
 }

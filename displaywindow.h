@@ -23,7 +23,23 @@ public:
 		get_cur_time_ = get_cur_time;
 	}
     void stop() {
-        queue_.abort();
+        queue_->abort();
+        delete queue_;
+        queue_ = nullptr;
+    }
+    void pause() {
+		paused_ = true;
+	}
+    void play() {
+        paused_ = false;
+    }
+    void pauseOrPlay() {
+        if (paused_) {
+            paused_ = false;
+        }
+        else {
+            paused_ = true;
+        }
     }
 
 protected:
@@ -31,7 +47,7 @@ protected:
 
 private:
 
-    BufferQueue<std::shared_ptr<Frame>> queue_;
+    BufferQueue<std::shared_ptr<Frame>>* queue_{nullptr};
 
     Ui::DisplayWindow *ui;
 
@@ -40,6 +56,11 @@ private:
     QImage image_;
 
     int droped_frames_{0};
+
+    bool paused_{false};
+
+    int updates_{0};
+
 };
 
 #endif // DISPLAYWINDOW_H

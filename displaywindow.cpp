@@ -17,17 +17,27 @@ DisplayWindow::~DisplayWindow()
 
 void DisplayWindow::enqueueFrame(std::shared_ptr<Frame> f)
 {
-    queue_.push(f);
+    if (!queue_) {
+        queue_ = new BufferQueue<std::shared_ptr<Frame>>();
+    }
+    queue_->push(f);
     update();
 }
 
 void DisplayWindow::paintEvent(QPaintEvent* event)
 {
+    if (!queue_) {
+		return;
+	}
+
     QPainter painter(this);
     
+    if (paused_) {
+        updates_++;
+		return;
+	}
 
-
-    auto f = queue_.tryPop();
+    auto f = queue_->tryPop();
     if (!f.get()) {
 		return;
     }
@@ -45,9 +55,9 @@ void DisplayWindow::paintEvent(QPaintEvent* event)
         // too late
         // drop the frame
         /*painter.drawImage(0, 0, image_);*/
-        while (!queue_.empty() && diff>0.04) {
+        while (!queue_->empty() && diff>0.04) {
             LOG_INFO("droped frame %d ", droped_frames_);
-			f = queue_.pop();
+			f = queue_->pop();
             diff = get_cur_time_() - f->pts_;
 		}
         

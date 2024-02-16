@@ -130,12 +130,15 @@ void FFPlayer::readPacketLoop() {
 	int ret = 0;
 	
 	while(1) {
-		mtx_.lock();
-		if(state_ == FFState::Stopped) {
-			mtx_.unlock();
+		std::unique_lock<std::mutex> lck(mtx_);
+		if (state_ == FFState::Pause) {
+			pause_cv_.wait(lck, [this] {return state_ == FFState::Playing || state_ == FFState::Stopped; });
+		}
+		if (state_ == FFState::Stopped) {
+			lck.unlock();
 			return;
 		}
-		mtx_.unlock();
+		lck.unlock();
 
 		std::shared_ptr<Packet> pkt_ptr = std::make_shared<Packet>();
 		AVPacket* pkt = pkt_ptr->get();
@@ -176,7 +179,7 @@ int FFPlayer::stop() {
 	if(state_ == FFState::Stopped) {
 		return 0;
 	}
-	if(state_ != FFState::Playing) {
+	if(state_ != FFState::Playing && state_!=FFState::Pause) {
 		LOG_INFO("try to stop ffplayer that its' state is not playing");
 		return -1;
 	}
@@ -185,7 +188,7 @@ int FFPlayer::stop() {
 	mtx_.lock();
 	state_ = FFState::Stopped;
 	mtx_.unlock();
-	
+	pause_cv_.notify_all();
 	video_packet_queue_.wakeUp();
 	audio_packet_queue_.wakeUp();
 
@@ -236,6 +239,30 @@ int FFPlayer::destroy()
 	return 0;
 }
 
+int FFPlayer::pauseOrPlay()
+{
+	mtx_.lock();
+	if (state_ == FFState::Playing) {
+		state_ = FFState::Pause;
+		mtx_.unlock();
+		audio_player_->pauseAudio();
+		return 0;
+	}
+	else if (state_ == FFState::Pause) {
+		state_ = FFState::Playing;
+		mtx_.unlock();
+		pause_cv_.notify_all();
+		audio_player_->resumeAudio();
+		return 0;
+	}
+	else {
+		LOG_ERROR("state is not playing or pause");
+		mtx_.unlock();
+		return -1;
+	}
+	return 0;
+}
+
 
 
 void FFPlayer::decodePacketLoop(int is_audio) {
@@ -244,12 +271,15 @@ void FFPlayer::decodePacketLoop(int is_audio) {
 
 	
 	while(1) {
-		mtx_.lock();
+		std::unique_lock<std::mutex> lck(mtx_);
+		if (state_ == FFState::Pause) {
+			pause_cv_.wait(lck, [this] {return state_ == FFState::Playing || state_ == FFState::Stopped; });
+		}
 		if(state_ == FFState::Stopped) {
-			mtx_.unlock();
+			lck.unlock();
 			return;
 		}
-		mtx_.unlock();
+		lck.unlock();
 		if (!is_audio) {
 			if(video_decoder_->getFrame(f) == 0) {
 				//video_frame_queue_.push(f);

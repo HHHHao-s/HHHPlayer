@@ -27,7 +27,7 @@ public:
 	int tryGetMsg(Msg& msg);
 	int blockGetMsg(Msg& msg);
 	int start();
-	int pause();
+	int pauseOrPlay();
 	int stop();
 	int destroy();
 	std::function<double()> getCurTimeCb();
@@ -47,6 +47,7 @@ private:
 		Playing,
 		Eof,
 		Error,
+		Pause
 
 	}state_{State::Idle};
 	// filter those message that no need to send to ui

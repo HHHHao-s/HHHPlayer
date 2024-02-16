@@ -106,11 +106,15 @@ public:
 	BufferQueue(size_t mx_size);
 	~BufferQueue();
 
+
+
 	void abort() {
 		mutex_.lock();
 		while(!queue_.empty() )
 			queue_.pop();
 		mutex_.unlock();
+		wakeUp();
+
 	}
 
 	size_t getSize() {

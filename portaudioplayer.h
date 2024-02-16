@@ -33,6 +33,7 @@ public:
     int pauseAudio();
     int stopAudio();
     int playAudio();
+    int resumeAudio();
 
     void enqueue(std::shared_ptr<Frame> frame) {
 		queue_.push(frame);
@@ -51,7 +52,7 @@ private:
     size_t pos_{ 0 };
     std::atomic<double> start_time_{ 0 };
     std::atomic<double> audio_clock_{ 0 };
-
+    double elapsed_{ 0 };
 };
 
 

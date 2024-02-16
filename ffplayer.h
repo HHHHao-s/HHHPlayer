@@ -54,6 +54,7 @@ public:
 	int start();
 	int stop();
 	int destroy();
+	int pauseOrPlay();
 
 	void decodePacketLoop(int );
 
@@ -74,6 +75,9 @@ private:
 
 	
 	std::mutex mtx_;
+	std::condition_variable pause_cv_;
+	
+
 	std::thread* read_thread_{nullptr};
 	std::thread* audio_decode_thread_{ nullptr };
 	std::thread* video_decode_thread_{ nullptr };

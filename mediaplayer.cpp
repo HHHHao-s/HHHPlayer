@@ -51,7 +51,7 @@ int MediaPlayer::prepareAsync() {
 		LOG_ERROR("prepareAsync failed\n");
 		return -1;
 	};
-
+	state_ = State::Prepared;
 	return ret;
 }
 
@@ -144,6 +144,10 @@ int MediaPlayer::doReady(Msg &msg) {
 
 int MediaPlayer::start() {
 	int ret = 0;
+	if (state_ != State::Prepared) {
+		LOG_ERROR("state is not prepared");
+		return -1;
+	}
 	if (player_ == NULL) {
 		LOG_ERROR("player is NULL\n");
 		return -1;
@@ -152,12 +156,24 @@ int MediaPlayer::start() {
 	if (ret < 0) {
 		LOG_ERROR("start failed\n");
 	};
+	state_ = State::Playing;
 	return ret;
 }
 
-int MediaPlayer::pause() {
+int MediaPlayer::pauseOrPlay() {
 	int ret = 0;
-	
+	if (state_ == State::Playing) {
+		ret = player_->pauseOrPlay();
+		state_ = State::Pause;
+	}
+	else if (state_ == State::Pause) {
+		ret = player_->pauseOrPlay();
+		state_ = State::Playing;
+	}
+	else {
+		LOG_ERROR("state is not playing or pause\n");
+		return -1;
+	}
 	return ret;
 }
 

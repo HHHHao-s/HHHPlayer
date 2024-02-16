@@ -42,10 +42,11 @@ void MainWindow::OnPlayOrPause() {
 		}
 
         displaywindow->setGetCurTime(mp_->getCurTimeCb());
-
+        displaywindow->play();
     }
     else {
-		mp_->pause();
+        
+		mp_->pauseOrPlay();
 	}
     return;
 }
