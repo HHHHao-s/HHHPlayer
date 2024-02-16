@@ -22,6 +22,9 @@ public:
     void setGetCurTime(std::function<double()> get_cur_time) {
 		get_cur_time_ = get_cur_time;
 	}
+    void stop() {
+        queue_.abort();
+    }
 
 protected:
     void paintEvent(QPaintEvent *event) override;

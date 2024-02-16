@@ -105,6 +105,8 @@ int MediaPlayer::filterMsg(Msg &msg) {
 	case MSG_READY:
 		doReady(msg);
 		break;
+	case MSG_DESTORY:
+		break;
 	default:
 		break;
 	}
@@ -168,7 +170,8 @@ int MediaPlayer::stop() {
 
 int MediaPlayer::destroy() {
 	int ret = 0;
-	
+	player_->destroy();
+	msg_thread_->join();
 	return ret;
 }
 

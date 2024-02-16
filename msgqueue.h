@@ -16,6 +16,7 @@
 #define MSG_ENDOFSTREAM 104
 #define MSG_ERROR 105
 #define MSG_STOP 106
+#define MSG_DESTORY 107
 
 struct Msg {
 

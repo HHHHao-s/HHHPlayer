@@ -44,17 +44,22 @@ void MainWindow::OnPlayOrPause() {
         displaywindow->setGetCurTime(mp_->getCurTimeCb());
 
     }
+    else {
+		mp_->pause();
+	}
     return;
 }
 
 void MainWindow::OnStop() {
 	LOG_INFO("OnStop");
+    ui->showWindow->stop();
 	if (mp_) {
 		mp_->stop();
         mp_->destroy();
 		delete mp_;
 		mp_ = nullptr;
 	}
+    
 	return;
 }
 
@@ -79,6 +84,9 @@ int MainWindow::messageLoop(void *arg) {
             case MSG_PREPARED:
                 doPrepared();
                 break;
+            case MSG_DESTORY:
+                // exit the message loop
+                return 0;
             default:
 				break;
         }

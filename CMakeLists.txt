@@ -34,6 +34,10 @@ set(PROJECT_SOURCES
         portaudioplayer.h
         imagescaler.cpp
         imagescaler.h
+        decoder.cpp
+        decoder.h
+        swsresampler.cpp
+        swsresampler.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

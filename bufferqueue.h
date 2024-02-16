@@ -108,7 +108,7 @@ public:
 
 	void abort() {
 		mutex_.lock();
-		while(!queue_.empty())
+		while(!queue_.empty() )
 			queue_.pop();
 		mutex_.unlock();
 	}
@@ -128,12 +128,20 @@ public:
 
 	T tryPop();
 
+	void wakeUp() {
+		wake_up_ = true;
+		empty_cond_.notify_all();
+		full_cond_.notify_all();
+	}
+
 private:
 	size_t mx_{512};
 	std::queue<T> queue_;
 	std::mutex mutex_;
 	std::condition_variable full_cond_;
 	std::condition_variable empty_cond_;
+	bool abort_{ false };
+	bool wake_up_{ false };
 };
 
 template <typename T>
@@ -150,8 +158,12 @@ template <typename T>
 void BufferQueue<T>::push(const T& item)
 {
 	std::unique_lock<std::mutex> lock(mutex_);
-	full_cond_.wait(lock, [this] { return queue_.size() < mx_; });
-	queue_.push(item);
+	full_cond_.wait(lock, [this] { return queue_.size() < mx_ || wake_up_; });
+	if (wake_up_) {
+		return;
+	}
+	queue_.emplace(item);
+
 	if (queue_.size() == 1) {
 		lock.unlock();
 		empty_cond_.notify_one();
@@ -160,14 +172,18 @@ void BufferQueue<T>::push(const T& item)
 		lock.unlock();
 	}
 
+
 }
 
 template <typename T>
 void BufferQueue<T>::push(T&& item)
 {
 	std::unique_lock<std::mutex> lock(mutex_);
-	full_cond_.wait(lock, [this] { return queue_.size() < mx_; });
-	queue_.emplace(std::move(item));
+	full_cond_.wait(lock, [this] { return queue_.size() < mx_ || wake_up_; });
+	if (wake_up_) {
+		return;
+	}
+	queue_.emplace(move(item));
 
 	if (queue_.size() == 1) {
 		lock.unlock();
@@ -184,7 +200,10 @@ template <typename T>
 T BufferQueue<T>::pop()
 {
 	std::unique_lock<std::mutex> lock(mutex_);
-	empty_cond_.wait(lock, [this] { return !queue_.empty(); });
+	empty_cond_.wait(lock, [this] { return !queue_.empty() || wake_up_; });
+	if (wake_up_) {
+		return T();
+	}
 	T item = std::move(queue_.front());
 	queue_.pop();
 

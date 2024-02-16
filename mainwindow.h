@@ -26,6 +26,7 @@ private:
     void OnStop();
     MediaPlayer* mp_{nullptr};
     int doPrepared();
+    
 
 };
 #endif // MAINWINDOW_H
